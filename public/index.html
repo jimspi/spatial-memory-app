@@ -1048,21 +1048,24 @@
             }
             
             async startLocationTracking() {
-                try {
-                    const location = await this.locationManager.getCurrentLocation();
-                    this.updateCurrentLocation(location);
-                    
-                    this.locationManager.startWatching((position) => {
-                        this.handleLocationUpdate(position);
-                    });
-                } catch (error) {
-                    console.error('Location tracking failed:', error);
-                    this.updateCurrentLocation({
-                        name: 'Location unavailable',
-                        accuracy: 'Enable location access'
-                    });
-                }
-            }
+    try {
+        const location = await this.locationManager.getCurrentLocation();
+        this.updateCurrentLocation(location);
+        
+        this.locationManager.startWatching((position) => {
+            this.handleLocationUpdate(position);
+        });
+    } catch (error) {
+        console.error('Location tracking failed:', error);
+        this.updateCurrentLocation({
+            name: 'Location unavailable',
+            accuracy: 'Enable location access'
+        });
+        
+        // Still allow app to work without location
+        this.showToast('📍 Enable location for better features', 'info');
+    }
+}
             
             updateCurrentLocation(location) {
     const locationName = typeof location === 'string' ? location : 
