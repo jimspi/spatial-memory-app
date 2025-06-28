@@ -1,0 +1,22 @@
+{
+  "name": "ai-spatial-memory",
+  "version": "1.0.0",
+  "description": "AI-powered personal spatial memory assistant",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build complete'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0",
+    "node-fetch": "^3.3.0",
+    "web-push": "^3.6.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  },
+  "keywords": ["ai", "memory", "spatial", "pwa", "productivity"],
+  "author": "Your Name",
+  "license": "MIT"
+}
