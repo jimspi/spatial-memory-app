@@ -1271,8 +1271,8 @@ addManualMemory(location, image) {
             }
             
             createMemoryCard(memory) {
-    const confidenceClass = memory.confidence > 90 ? '' : 
-                           memory.confidence > 75 ? 'medium' : 'low';
+    const confidenceClass = memory.confidence >= 90 ? '' : 
+                       memory.confidence >= 75 ? 'medium' : 'low';
     
     const timeAgo = this.getTimeAgo(memory.timestamp);
     
