@@ -1075,25 +1075,29 @@
 }
             
             addLocationToHistory(location) {
-                const existing = this.locations.find(l => l.name === location.name);
-                if (existing) {
-                    existing.visits++;
-                    existing.lastVisit = new Date().toISOString();
-                } else {
-                    this.locations.unshift({
-                        id: Date.now(),
-                        name: location.name,
-                        coordinates: location.coordinates,
-                        visits: 1,
-                        lastVisit: new Date().toISOString(),
-                        firstVisit: new Date().toISOString()
-                    });
-                }
-                
-                this.locations = this.locations.slice(0, 50);
-                this.updateLocationsDisplay();
-                this.saveData();
-            }
+    if (!location || !location.name) return;
+    
+    const locationName = typeof location.name === 'string' ? location.name : 'Unknown location';
+    
+    const existing = this.locations.find(l => l.name === locationName);
+    if (existing) {
+        existing.visits++;
+        existing.lastVisit = new Date().toISOString();
+    } else {
+        this.locations.unshift({
+            id: Date.now(),
+            name: locationName,
+            coordinates: location.coordinates || null,
+            visits: 1,
+            lastVisit: new Date().toISOString(),
+            firstVisit: new Date().toISOString()
+        });
+    }
+    
+    this.locations = this.locations.slice(0, 50);
+    this.updateLocationsDisplay();
+    this.saveData();
+}
             
             handleLocationUpdate(position) {
                 if (this.lastLocationUpdate && 
@@ -1267,34 +1271,37 @@ addManualMemory(location, image) {
             }
             
             createMemoryCard(memory) {
-                const confidenceClass = memory.confidence > 90 ? '' : 
-                                       memory.confidence > 75 ? 'medium' : 'low';
-                
-                const timeAgo = this.getTimeAgo(memory.timestamp);
-                
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                card.setAttribute('data-item', memory.item.toLowerCase());
-                
-                card.innerHTML = `
-                    <div class="confidence-badge ${confidenceClass}">${memory.confidence}% sure</div>
-                    <div style="display: flex; align-items: center;">
-                        ${memory.image ? `<img src="${memory.image}" class="memory-image" alt="${memory.item}">` : ''}
-                        <div class="memory-content">
-                            <div class="memory-item">
-                                ${memory.item}
-                                ${memory.aiDetected ? '<span class="ai-detected">AI</span>' : ''}
-                            </div>
-                            <div class="memory-location">📍 ${memory.location}</div>
-                            <div class="memory-time">⏰ ${timeAgo}</div>
-                            ${memory.description ? `<div style="font-size: 12px; color: #888; margin-top: 4px;">${memory.description}</div>` : ''}
-                        </div>
-                    </div>
-                `;
-                
-                card.onclick = () => this.showMemoryDetails(memory);
-                return card;
-            }
+    const confidenceClass = memory.confidence > 90 ? '' : 
+                           memory.confidence > 75 ? 'medium' : 'low';
+    
+    const timeAgo = this.getTimeAgo(memory.timestamp);
+    
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.setAttribute('data-item', memory.item.toLowerCase());
+    
+    // Ensure location is a string
+    const locationText = typeof memory.location === 'string' ? memory.location : 'Unknown location';
+    
+    card.innerHTML = `
+        <div class="confidence-badge ${confidenceClass}">${memory.confidence}% sure</div>
+        <div style="display: flex; align-items: center;">
+            ${memory.image ? `<img src="${memory.image}" class="memory-image" alt="${memory.item}">` : ''}
+            <div class="memory-content">
+                <div class="memory-item">
+                    ${memory.item}
+                    ${memory.aiDetected ? '<span class="ai-detected">AI</span>' : ''}
+                </div>
+                <div class="memory-location">📍 ${locationText}</div>
+                <div class="memory-time">⏰ ${timeAgo}</div>
+                ${memory.description ? `<div style="font-size: 12px; color: #888; margin-top: 4px;">${memory.description}</div>` : ''}
+            </div>
+        </div>
+    `;
+    
+    card.onclick = () => this.showMemoryDetails(memory);
+    return card;
+}
             
             getTimeAgo(timestamp) {
                 const now = new Date();
@@ -1312,20 +1319,58 @@ addManualMemory(location, image) {
             }
             
             showMemoryDetails(memory) {
-                const timeAgo = this.getTimeAgo(memory.timestamp);
-                let message = `📍 ${memory.item}\n\n`;
-                message += `Location: ${memory.location}\n`;
-                message += `Time: ${timeAgo}\n`;
-                message += `Confidence: ${memory.confidence}%\n`;
-                if (memory.description) {
-                    message += `\n${memory.description}\n`;
-                }
-                message += `\n👆 Tap OK to get directions or mark as found`;
-                
-                if (confirm(message)) {
-                    this.markAsFound(memory);
-                }
-            }
+    const timeAgo = this.getTimeAgo(memory.timestamp);
+    const locationText = typeof memory.location === 'string' ? memory.location : 'Unknown location';
+    
+    let message = `📍 ${memory.item}\n\n`;
+    message += `Location: ${locationText}\n`;
+    message += `Time: ${timeAgo}\n`;
+    message += `Confidence: ${memory.confidence}%\n`;
+    if (memory.description) {
+        message += `\nDescription: ${memory.description}\n`;
+    }
+    message += `\nOptions:\n• OK = Mark as found\n• Cancel = Get directions`;
+    
+    if (confirm(message)) {
+        this.markAsFound(memory);
+    } else {
+        this.navigateToLocation(locationText);
+    }
+}
+
+markAsFound(memory) {
+    const index = this.memories.findIndex(m => m.id === memory.id);
+    if (index > -1) {
+        this.memories[index].found = true;
+        this.memories[index].foundAt = new Date().toISOString();
+        this.updateMemoriesDisplay();
+        this.saveData();
+        
+        const itemName = memory.item || 'item';
+        this.showToast(`✅ Marked "${itemName}" as found`);
+    }
+}
+
+navigateToLocation(locationName) {
+    if (!locationName || locationName === 'Unknown location') {
+        this.showToast('❌ Location not available for navigation', 'error');
+        return;
+    }
+    
+    // Find location with coordinates
+    const location = this.locations.find(l => l.name === locationName);
+    if (location && location.coordinates) {
+        const { lat, lng } = location.coordinates;
+        const url = `https://maps.google.com/maps?q=${lat},${lng}`;
+        window.open(url, '_blank');
+        this.showToast(`🗺️ Opening directions to ${locationName}`);
+    } else {
+        // Fallback to search
+        const url = `https://maps.google.com/maps?q=${encodeURIComponent(locationName)}`;
+        window.open(url, '_blank');
+        this.showToast(`🗺️ Searching for ${locationName} on maps`);
+    }
+}
             
             markAsFound(memory) {
                 const index = this.memories.findIndex(m => m.id === memory.id);
@@ -1538,17 +1583,9 @@ addManualMemory(location, image) {
 }
 
 startSmartPrompts() {
-    // Show first prompt after 10 seconds
-    setTimeout(() => {
-        this.showSmartPrompt();
-    }, 10000);
-    
-    // Then show prompts every 2 minutes for testing
-    setInterval(() => {
-        if (Math.random() > 0.3) { // 70% chance
-            this.showSmartPrompt();
-        }
-    }, 120000); // Every 2 minutes
+    // Only show prompts based on real user data
+    // Don't show fake welcome prompts
+    console.log('Smart prompts enabled - will only show based on real memories');
 }
             
             sendWelcomeNotification() {
@@ -1562,17 +1599,10 @@ startSmartPrompts() {
             }
             
             startPeriodicReminders() {
-    // Show smart prompts more frequently for testing
-    setInterval(() => {
-        if (Math.random() > 0.5 && this.currentTab === 'memories') { // 50% chance
-            this.showSmartPrompt();
-        }
-    }, 30000); // Every 30 seconds
-    
-    // Check for forgotten items every 2 minutes
+    // Only check for actual forgotten items every 5 minutes
     setInterval(() => {
         this.checkForForgottenItems();
-    }, 120000);
+    }, 300000); // Every 5 minutes
 }
             
             checkForForgottenItems() {
@@ -1591,18 +1621,33 @@ startSmartPrompts() {
             }
             
             showSmartPrompt(customMessage) {
-                const prompts = [
-                    "You'll pass the hardware store in 15 mins - need those batteries you mentioned?",
-                    "Your bike is still parked at the northeast rack since 10 AM",
-                    "You left your water bottle at the gym yesterday - still there?",
-                    "Meeting starts in 30 mins - don't forget your presentation notes from the office",
-                    "You're near the coffee shop where you left your charger this morning"
-                ];
-                
-                const message = customMessage || prompts[Math.floor(Math.random() * prompts.length)];
-                document.getElementById('promptText').textContent = message;
-                document.getElementById('smartPrompt').style.display = 'block';
-            }
+    // Only show prompts based on actual user data
+    if (this.memories.length === 0) {
+        return; // Don't show prompts if no memories exist
+    }
+    
+    // Create prompts based on actual memories
+    const actualPrompts = [];
+    
+    // Check for items left in different locations
+    const currentLocation = document.getElementById('currentLocation').textContent;
+    const itemsElsewhere = this.memories.filter(memory => 
+        memory.location !== currentLocation && !memory.found
+    );
+    
+    if (itemsElsewhere.length > 0) {
+        const item = itemsElsewhere[0];
+        actualPrompts.push(`You left your ${item.item} at ${item.location}. Still need it?`);
+    }
+    
+    // Only show prompt if we have real data or custom message
+    const message = customMessage || (actualPrompts.length > 0 ? actualPrompts[0] : null);
+    
+    if (message) {
+        document.getElementById('promptText').textContent = message;
+        document.getElementById('smartPrompt').style.display = 'block';
+    }
+}
             
             dismissPrompt() {
                 document.getElementById('smartPrompt').style.display = 'none';
