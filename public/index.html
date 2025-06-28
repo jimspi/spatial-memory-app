@@ -1060,12 +1060,19 @@
             }
             
             updateCurrentLocation(location) {
-                document.getElementById('currentLocation').textContent = location.name;
-                document.getElementById('locationAccuracy').textContent = 
-                    location.accuracy ? `Accuracy: ±${location.accuracy}m` : 'Tap to refresh';
-                
-                this.addLocationToHistory(location);
-            }
+    const locationName = typeof location === 'string' ? location : 
+                        location.name || location.formatted_address || 
+                        'Current Location';
+    
+    document.getElementById('currentLocation').textContent = locationName;
+    document.getElementById('locationAccuracy').textContent = 
+        location.accuracy ? `Accuracy: ±${location.accuracy}m` : 'Tap to refresh';
+    
+    this.addLocationToHistory({
+        name: locationName,
+        coordinates: location.coordinates
+    });
+}
             
             addLocationToHistory(location) {
                 const existing = this.locations.find(l => l.name === location.name);
@@ -1192,49 +1199,45 @@
             }
             
             addAIMemory(objects, location, image) {
-                objects.forEach(obj => {
-                    const memory = {
-                        id: Date.now() + Math.random(),
-                        item: obj.name,
-                        location: location,
-                        timestamp: new Date().toISOString(),
-                        confidence: obj.confidence,
-                        image: image,
-                        aiDetected: true,
-                        description: obj.description
-                    };
-                    this.memories.unshift(memory);
-                });
-                
-                this.updateMemoriesDisplay();
-                this.saveData();
-            }
-            
-            addManualMemory(location, image) {
-                const itemName = prompt('🏷️ What item did you photograph?');
-                if (!itemName) return;
-                
-                const memory = {
-                    id: Date.now(),
-                    item: itemName,
-                    location: location,
-                    timestamp: new Date().toISOString(),
-                    confidence: 90,
-                    image: image,
-                    aiDetected: false,
-                    userEntered: true
-                };
-                
-                this.memories.unshift(memory);
-                this.updateMemoriesDisplay();
-                this.saveData();
-                this.showToast(`✅ Tagged "${itemName}"`);
-            }
-            
-            toggleFlash() {
-                this.showToast('💡 Flash toggled');
-            }
-            
+    objects.forEach(obj => {
+        const memory = {
+            id: Date.now() + Math.random(),
+            item: obj.name,
+            location: typeof location === 'string' ? location : location.name || 'Unknown location',
+            timestamp: new Date().toISOString(),
+            confidence: obj.confidence,
+            image: image,
+            aiDetected: true,
+            description: obj.description
+        };
+        this.memories.unshift(memory);
+    });
+    
+    this.updateMemoriesDisplay();
+    this.saveData();
+}
+
+addManualMemory(location, image) {
+    const itemName = prompt('🏷️ What item did you photograph?');
+    if (!itemName) return;
+    
+    const memory = {
+        id: Date.now(),
+        item: itemName,
+        location: typeof location === 'string' ? location : location.name || 'Unknown location',
+        timestamp: new Date().toISOString(),
+        confidence: 90,
+        image: image,
+        aiDetected: false,
+        userEntered: true
+    };
+    
+    this.memories.unshift(memory);
+    this.updateMemoriesDisplay();
+    this.saveData();
+    this.showToast(`✅ Tagged "${itemName}"`);
+}
+                        
             // Memory Management
             updateMemoriesDisplay() {
                 const memoriesList = document.getElementById('memoriesList');
@@ -1515,14 +1518,38 @@
             
             // Notifications and Prompts
             async requestNotificationPermission() {
-                if ('Notification' in window && Notification.permission === 'default') {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        this.showToast('🔔 Notifications enabled');
-                        this.sendWelcomeNotification();
-                    }
-                }
+    if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                this.showToast('🔔 Notifications enabled');
+                this.sendWelcomeNotification();
+                // Start showing prompts more frequently
+                this.startSmartPrompts();
+            } else {
+                this.showToast('❌ Notifications blocked', 'error');
             }
+        } else if (Notification.permission === 'granted') {
+            this.startSmartPrompts();
+        }
+    } else {
+        this.showToast('❌ Notifications not supported', 'error');
+    }
+}
+
+startSmartPrompts() {
+    // Show first prompt after 10 seconds
+    setTimeout(() => {
+        this.showSmartPrompt();
+    }, 10000);
+    
+    // Then show prompts every 2 minutes for testing
+    setInterval(() => {
+        if (Math.random() > 0.3) { // 70% chance
+            this.showSmartPrompt();
+        }
+    }, 120000); // Every 2 minutes
+}
             
             sendWelcomeNotification() {
                 if (Notification.permission === 'granted') {
@@ -1535,16 +1562,18 @@
             }
             
             startPeriodicReminders() {
-                setInterval(() => {
-                    if (Math.random() > 0.8 && this.currentTab === 'memories') {
-                        this.showSmartPrompt();
-                    }
-                }, 45000);
-                
-                setInterval(() => {
-                    this.checkForForgottenItems();
-                }, 300000);
-            }
+    // Show smart prompts more frequently for testing
+    setInterval(() => {
+        if (Math.random() > 0.5 && this.currentTab === 'memories') { // 50% chance
+            this.showSmartPrompt();
+        }
+    }, 30000); // Every 30 seconds
+    
+    // Check for forgotten items every 2 minutes
+    setInterval(() => {
+        this.checkForForgottenItems();
+    }, 120000);
+}
             
             checkForForgottenItems() {
                 const currentLocation = document.getElementById('currentLocation').textContent;
