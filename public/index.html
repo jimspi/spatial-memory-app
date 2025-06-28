@@ -1322,20 +1322,98 @@ addManualMemory(location, image) {
     const timeAgo = this.getTimeAgo(memory.timestamp);
     const locationText = typeof memory.location === 'string' ? memory.location : 'Unknown location';
     
-    let message = `📍 ${memory.item}\n\n`;
-    message += `Location: ${locationText}\n`;
-    message += `Time: ${timeAgo}\n`;
-    message += `Confidence: ${memory.confidence}%\n`;
-    if (memory.description) {
-        message += `\nDescription: ${memory.description}\n`;
-    }
-    message += `\nOptions:\n• OK = Mark as found\n• Cancel = Get directions`;
+    // Create custom overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 3000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
     
-    if (confirm(message)) {
+    // Create dialog
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: #2a2a2a;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 90vw;
+        width: 400px;
+        color: white;
+        text-align: center;
+    `;
+    
+    dialog.innerHTML = `
+        <h3 style="margin-bottom: 16px; color: #3b82f6;">📍 ${memory.item}</h3>
+        <div style="text-align: left; margin-bottom: 20px; line-height: 1.6;">
+            <p><strong>Location:</strong> ${locationText}</p>
+            <p><strong>Time:</strong> ${timeAgo}</p>
+            <p><strong>Confidence:</strong> ${memory.confidence}%</p>
+            ${memory.description ? `<p><strong>Description:</strong> ${memory.description}</p>` : ''}
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button id="markFoundBtn" style="
+                background: #22c55e;
+                color: white;
+                border: none;
+                padding: 12px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+            ">✅ Mark Found</button>
+            <button id="getDirectionsBtn" style="
+                background: #3b82f6;
+                color: white;
+                border: none;
+                padding: 12px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+            ">🗺️ Get Directions</button>
+        </div>
+        <button id="closeBtn" style="
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-top: 12px;
+            cursor: pointer;
+            width: 100%;
+        ">Close</button>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    // Add event listeners
+    document.getElementById('markFoundBtn').onclick = () => {
         this.markAsFound(memory);
-    } else {
+        document.body.removeChild(overlay);
+    };
+    
+    document.getElementById('getDirectionsBtn').onclick = () => {
         this.navigateToLocation(locationText);
-    }
+        document.body.removeChild(overlay);
+    };
+    
+    document.getElementById('closeBtn').onclick = () => {
+        document.body.removeChild(overlay);
+    };
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    };
 }
 
 markAsFound(memory) {
@@ -1577,6 +1655,9 @@ navigateToLocation(locationName) {
         } else if (Notification.permission === 'granted') {
             this.startSmartPrompts();
         }
+    } else {
+    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+        this.showToast('💡 iPhone: Smart prompts will show when you open the app', 'info');
     } else {
         this.showToast('❌ Notifications not supported', 'error');
     }
