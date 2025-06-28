@@ -1,0 +1,29 @@
+json
+{
+  "name": "AI Spatial Memory",
+  "short_name": "SpatialMem",
+  "description": "Your personal AI spatial memory assistant",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij4KICA8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iIzAwMDAwMCIvPgogIDxjaXJjbGUgY3g9IjY0IiBjeT0iNjQiIHI9IjE4IiBmaWxsPSIjM0I4MkY2Ii8+CiAgPGNpcmNsZSBjeD0iNjQiIGN5PSIxMDQiIHI9IjgiIGZpbGw9IiMzQjgyRjYiLz4KPC9zdmc+",
+      "sizes": "128x128",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwMDAwMCIvPgogIDxjaXJjbGUgY3g9Ijk2IiBjeT0iOTYiIHI9IjI4IiBmaWxsPSIjM0I4MkY2Ii8+CiAgPGNpcmNsZSBjeD0iOTYiIGN5PSIxNTYiIHI9IjEyIiBmaWxsPSIjM0I4MkY2Ii8+Cjwvc3ZnPg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzAwMDAwMCIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iNzIiIGZpbGw9IiMzQjgyRjYiLz4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSI0MTYiIHI9IjMyIiBmaWxsPSIjM0I4MkY2Ii8+Cjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
